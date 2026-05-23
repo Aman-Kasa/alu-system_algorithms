@@ -11,7 +11,7 @@ void graph_delete(graph_t *graph)
 	edge_t *e_curr, *e_next;
 
 	if (!graph)
-		return (0);
+		return;
 
 	v_curr = graph->vertices;
 	while (v_curr)

@@ -2,88 +2,84 @@
 #include "graphs.h"
 
 /**
- * struct queue_s - Basic node wrapper for parsing BFS queues.
- * @vertex: Targeted vertex element.
- * @depth: Height coordinate track trace.
- * @next: Pointer targeting next segment.
+ * enqueue_edges - Enqueues all unvisited neighbors of a given vertex.
+ * @v: The current vertex being processed.
+ * @queue: The queue array storing vertices to visit.
+ * @depths: The array tracking the depth of each vertex in the queue.
+ * @tail: A pointer to the tail index of the queue.
+ * @visited: The array tracking visited vertices.
+ * @curr_depth: The depth of the current parent vertex.
  */
-typedef struct queue_s
+static void enqueue_edges(const vertex_t *v, const vertex_t **queue,
+			  size_t *depths, size_t *tail,
+			  int *visited, size_t curr_depth)
 {
-	const vertex_t *vertex;
-	size_t depth;
-	struct queue_s *next;
-} queue_t;
+	edge_t *edge = v->edges;
+
+	while (edge)
+	{
+		if (!visited[edge->dest->index])
+		{
+			visited[edge->dest->index] = 1;
+			queue[*tail] = edge->dest;
+			depths[*tail] = curr_depth + 1;
+			(*tail)++;
+		}
+		edge = edge->next;
+	}
+}
 
 /**
- * breadth_first_traverse - Tracks layers cleanly via FIFO loop sequences.
- * @graph: Target graph mapping structure.
- * @action: Function code segment targeting items.
+ * breadth_first_traverse - Goes through a graph using breadth-first algorithm.
+ * @graph: A pointer to the graph to traverse.
+ * @action: A pointer to a function to be called for each visited vertex.
  *
- * Return: Final recorded execution height level.
+ * Return: The biggest vertex depth, or 0 on failure.
  */
 size_t breadth_first_traverse(const graph_t *graph,
 			      void (*action)(const vertex_t *v, size_t depth))
 {
+	const vertex_t **queue;
+	size_t *depths;
 	int *visited;
-	size_t global_max = 0;
-	queue_t *head = NULL, *tail = NULL, *temp = NULL;
-	edge_t *edge = NULL;
+	size_t head = 0, tail = 0, max_depth = 0;
 
 	if (!graph || !action || !graph->vertices)
 		return (0);
+
+	queue = malloc(graph->nb_vertices * sizeof(*queue));
+	depths = malloc(graph->nb_vertices * sizeof(*depths));
 	visited = calloc(graph->nb_vertices, sizeof(*visited));
-	if (!visited)
-		return (0);
-	head = malloc(sizeof(*head));
-	if (!head)
+
+	if (!queue || !depths || !visited)
 	{
+		free(queue);
+		free(depths);
 		free(visited);
 		return (0);
 	}
-	head->vertex = graph->vertices;
-	head->depth = 0;
-	head->next = NULL;
-	tail = head;
+
+	queue[tail] = graph->vertices;
+	depths[tail] = 0;
 	visited[graph->vertices->index] = 1;
-	while (head)
+	tail++;
+
+	while (head < tail)
 	{
-		const vertex_t *curr = head->vertex;
-		size_t curr_depth = head->depth;
+		const vertex_t *curr = queue[head];
+		size_t curr_depth = depths[head];
 
 		action(curr, curr_depth);
-		if (curr_depth > global_max)
-			global_max = curr_depth;
-		edge = curr->edges;
-		while (edge)
-		{
-			if (!visited[edge->dest->index])
-			{
-				queue_t *new_node = malloc(sizeof(*new_node));
+		if (curr_depth > max_depth)
+			max_depth = curr_depth;
 
-				if (!new_node)
-				{
-					while (head)
-					{
-						temp = head->next;
-						free(head);
-						head = temp;
-					}
-					free(visited);
-					return (0);
-				}
-				new_node->vertex = edge->dest;
-				new_node->depth = curr_depth + 1;
-				new_node->next = NULL;
-				tail->next = new_node;
-				tail = new_node;
-				visited[edge->dest->index] = 1;
-			}
-			edge = edge->next;
-		}
-		temp = head->next;
-		free(head);
-		head = temp;
+		enqueue_edges(curr, queue, depths, &tail, visited, curr_depth);
+		head++;
 	}
+
+	free(queue);
+	free(depths);
 	free(visited);
-	return (global_max);
+
+	return (max_depth);
 }
