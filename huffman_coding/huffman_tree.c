@@ -39,8 +39,8 @@ binary_tree_node_t *huffman_tree(char *data, size_t *freq, size_t size)
 		root = (binary_tree_node_t *)pq->root->data;
 	}
 
-	/* Free the priority queue structure shell itself */
-	free(pq);
+	/* Use heap_delete to clear internal heap arrays safely */
+	heap_delete(pq, NULL);
 
 	return (root);
 }
