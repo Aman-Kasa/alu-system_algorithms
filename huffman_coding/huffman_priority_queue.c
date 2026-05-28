@@ -23,14 +23,14 @@ int freq_cmp(void *p1, void *p2)
 	if (sym1->freq != sym2->freq)
 		return ((int)(sym1->freq - sym2->freq));
 
-	/* 2. Secondary check: Handle internal node '$' ties */
+	/* 2. Secondary check: Prioritize internal nodes ($) over leaves */
 	if (sym1->data == '$' && sym2->data != '$')
-		return (1);
-	if (sym1->data != '$' && sym2->data == '$')
 		return (-1);
+	if (sym1->data != '$' && sym2->data == '$')
+		return (1);
 
-	/* 3. Tertiary check: Sort by char */
-	return ((int)(sym1->data - sym2->data));
+	/* 3. Leave natural arrival order for matching frequencies */
+	return (0);
 }
 
 /**
