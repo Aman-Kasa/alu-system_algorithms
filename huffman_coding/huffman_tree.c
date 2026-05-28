@@ -3,46 +3,44 @@
 #include "huffman.h"
 
 /**
- * huffman_tree - Builds a complete Huffman tree pipeline
- * @data: Array of characters of size size
- * @freq: Array containing the associated frequencies of size size
+ * huffman_tree - Builds a Huffman tree from data and frequencies
+ * @data: Array of characters
+ * @freq: Array containing the associated frequencies
  * @size: Size of the arrays
  *
- * Return: Pointer to the root node of the Huffman tree, or NULL if it fails
+ * Return: Pointer to the root node of the Huffman tree, or NULL on failure
  */
 binary_tree_node_t *huffman_tree(char *data, size_t *freq, size_t size)
 {
-	heap_t *priority_queue;
-	binary_tree_node_t *huffman_root;
+	heap_t *pq = NULL;
+	binary_tree_node_t *root = NULL;
 
 	if (!data || !freq || size == 0)
 		return (NULL);
 
-	/* Step 1: Initialize the priority queue */
-	priority_queue = huffman_priority_queue(data, freq, size);
-	if (!priority_queue)
+	/* Create priority queue from data and frequencies */
+	pq = huffman_priority_queue(data, freq, size);
+	if (!pq)
 		return (NULL);
 
-	/* Step 2: Combine nodes until only one remains */
-	while (priority_queue->size > 1)
+	/* Combine nodes until only 1 root node remains in the queue */
+	while (pq->root && (pq->root->left || pq->root->right))
 	{
-		if (!huffman_extract_and_insert(priority_queue))
+		if (!huffman_extract_and_insert(pq))
 		{
-			heap_delete(priority_queue, NULL);
+			heap_delete(pq, NULL);
 			return (NULL);
 		}
 	}
 
-	/* Step 3: Extract the final remaining node (the Huffman tree root) */
-	huffman_root = (binary_tree_node_t *)heap_extract(priority_queue);
-	if (!huffman_root)
+	/* Extract the Huffman tree root nested inside the last node */
+	if (pq->root)
 	{
-		heap_delete(priority_queue, NULL);
-		return (NULL);
+		root = (binary_tree_node_t *)pq->root->data;
 	}
 
-	/* Step 4: Deallocate the priority queue tracking framework itself */
-	heap_delete(priority_queue, NULL);
+	/* Free the priority queue structure shell itself */
+	free(pq);
 
-	return (huffman_root);
+	return (root);
 }
