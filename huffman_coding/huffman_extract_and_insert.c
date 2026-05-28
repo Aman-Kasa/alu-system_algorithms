@@ -1,46 +1,107 @@
 #include <stdlib.h>
+#include "heap.h"
 #include "huffman.h"
-#include "heap/heap.h"
 
 /**
- * huffman_extract_and_insert -Extracts two nodes and inserts a newparent node
- * @priority_queue: Pointer to the priority queue
+ * freq_cmp - Compares the frequencies of two nested symbol nodes
+ * @p1: Pointer to the first nested binary tree node
+ * @p2: Pointer to the second nested binary tree node
  *
- * Return: 1 on success, 0 on failure
+ * Return: Negative if p1 < p2, Positive if p1 > p2, 0 if equal
  */
-int huffman_extract_and_insert(heap_t *priority_queue)
+int freq_cmp(void *p1, void *p2)
 {
-	binary_tree_node_t *left_nested, *right_nested, *parent_nested;
-	symbol_t *sum_sym;
+	binary_tree_node_t *node1, *node2;
+	symbol_t *sym1, *sym2;
 
-	if (!priority_queue || priority_queue->size < 2)
-		return (0);
+	node1 = (binary_tree_node_t *)p1;
+	node2 = (binary_tree_node_t *)p2;
+	sym1 = (symbol_t *)node1->data;
+	sym2 = (symbol_t *)node2->data;
 
-	left_nested = (binary_tree_node_t *)heap_extract(priority_queue);
-	right_nested = (binary_tree_node_t *)heap_extract(priority_queue);
+	/* 1. Primary check: Frequencies */
+	if (sym1->freq != sym2->freq)
+		return ((int)(sym1->freq - sym2->freq));
 
-	if (!left_nested || !right_nested)
-		return (0);
+	/* 2. Secondary check: Handle internal node '$' ties */
+	/* Push internal nodes to the right of same-frequency leaf nodes */
+	if (sym1->data == '$' && sym2->data != '$')
+		return (1);
+	if (sym1->data != '$' && sym2->data == '$')
+		return (-1);
 
-	sum_sym = symbol_create(-1, ((symbol_t *)left_nested->data)->freq +
-				     ((symbol_t *)right_nested->data)->freq);
-	if (!sum_sym)
-		return (0);
+	/* 3. Tertiary check: Both are leaves or both are internal, sort by char */
+	return ((int)(sym1->data - sym2->data));
+}
 
-	parent_nested = binary_tree_node(NULL, sum_sym);
-	if (!parent_nested)
+/**
+ * free_failed_queue - Cleans up allocated memory if initialization fails
+ * @heap: Pointer to the priority queue heap
+ */
+void free_failed_queue(heap_t *heap)
+{
+	binary_tree_node_t *nested_node;
+
+	while (heap->root)
 	{
-		free(sum_sym);
-		return (0);
+		nested_node = (binary_tree_node_t *)heap_extract(heap);
+		if (nested_node)
+		{
+			if (nested_node->data)
+				free(nested_node->data);
+			free(nested_node);
+		}
+	}
+	free(heap);
+}
+
+/**
+ * huffman_priority_queue - Creates a priority queue for Huffman coding
+ * @data: Array of characters
+ * @freq: Array containing the associated frequencies
+ * @size: Size of the arrays
+ *
+ * Return: Pointer to the created min-heap priority queue, or NULL on failure
+ */
+heap_t *huffman_priority_queue(char *data, size_t *freq, size_t size)
+{
+	heap_t *heap;
+	symbol_t *sym;
+	binary_tree_node_t *nested_node;
+	size_t i;
+
+	if (!data || !freq || size == 0)
+		return (NULL);
+
+	heap = heap_create(freq_cmp);
+	if (!heap)
+		return (NULL);
+
+	for (i = 0; i < size; i++)
+	{
+		sym = symbol_create(data[i], freq[i]);
+		if (!sym)
+		{
+			free_failed_queue(heap);
+			return (NULL);
+		}
+
+		nested_node = binary_tree_node(NULL, sym);
+		if (!nested_node)
+		{
+			free(sym);
+			free_failed_queue(heap);
+			return (NULL);
+		}
+
+		if (!heap_insert(heap, nested_node))
+		{
+			free(sym);
+			free(nested_node);
+			free_failed_queue(heap);
+			return (NULL);
+		}
 	}
 
-	parent_nested->left = left_nested;
-	parent_nested->right = right_nested;
-	left_nested->parent = parent_nested;
-	right_nested->parent = parent_nested;
-
-	if (!heap_insert(priority_queue, parent_nested))
-		return (0);
-
-	return (1);
+	return (heap);
 }
