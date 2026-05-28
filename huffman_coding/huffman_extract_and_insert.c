@@ -3,7 +3,7 @@
 #include "heap/heap.h"
 
 /**
- * huffman_extract_and_insert - Extracts two nodes and inserts a new parent node
+ * huffman_extract_and_insert -Extracts two nodes and inserts a newparent node
  * @priority_queue: Pointer to the priority queue
  *
  * Return: 1 on success, 0 on failure
