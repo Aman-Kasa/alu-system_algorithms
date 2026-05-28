@@ -7,7 +7,7 @@
  * @p1: Pointer to the first nested binary tree node
  * @p2: Pointer to the second nested binary tree node
  *
- * Return: The difference between the frequencies
+ * Return: Negative if p1 < p2, Positive if p1 > p2, 0 if equal
  */
 int freq_cmp(void *p1, void *p2)
 {
@@ -16,11 +16,21 @@ int freq_cmp(void *p1, void *p2)
 
 	node1 = (binary_tree_node_t *)p1;
 	node2 = (binary_tree_node_t *)p2;
-
 	sym1 = (symbol_t *)node1->data;
 	sym2 = (symbol_t *)node2->data;
 
-	return ((int)(sym1->freq - sym2->freq));
+	/* 1. Primary check: Frequencies */
+	if (sym1->freq != sym2->freq)
+		return ((int)(sym1->freq - sym2->freq));
+
+	/* 2. Secondary check: Handle internal node '$' ties */
+	if (sym1->data == '$' && sym2->data != '$')
+		return (1);
+	if (sym1->data != '$' && sym2->data == '$')
+		return (-1);
+
+	/* 3. Tertiary check: Sort by char */
+	return ((int)(sym1->data - sym2->data));
 }
 
 /**
@@ -86,7 +96,7 @@ heap_t *huffman_priority_queue(char *data, size_t *freq, size_t size)
 		if (!heap_insert(heap, nested_node))
 		{
 			free(sym);
-			free(nested_node);
+			free_nested_node(heap);
 			free_failed_queue(heap);
 			return (NULL);
 		}
