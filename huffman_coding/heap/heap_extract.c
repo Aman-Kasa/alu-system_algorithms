@@ -2,9 +2,9 @@
 #include "heap.h"
 
 /**
- * bubble_down - Restores the min-heap order by pushing a node down
+ * bubble_down - Restores min-heap property from the root down to leaves
  * @heap: Pointer to the heap
- * @node: Pointer to the node to sift down
+ * @node: Pointer to the node to bubble down
  */
 void bubble_down(heap_t *heap, binary_tree_node_t *node)
 {
@@ -28,45 +28,16 @@ void bubble_down(heap_t *heap, binary_tree_node_t *node)
 }
 
 /**
- * get_last_node - Locates the last node in the complete binary tree
- * @root: Root of the tree
- * @size: Size of the heap
- *
- * Return: Pointer to the last node
- */
-binary_tree_node_t *get_last_node(binary_tree_node_t *root, size_t size)
-{
-	size_t mask;
-
-	if (!root || size == 0)
-		return (NULL);
-
-	mask = 1;
-	while (mask <= size)
-		mask <<= 1;
-	mask >>= 2;
-
-	while (mask > 0)
-	{
-		if (size & mask)
-			root = root->right;
-		else
-			root = root->left;
-		mask >>= 1;
-	}
-	return (root);
-}
-
-/**
- * heap_extract - Extracts the root value of a Min Binary Heap
+ * heap_extract - Extracts the root value from a Min Binary Heap
  * @heap: Pointer to the heap from which to extract the value
  *
- * Return: Pointer to the data stored in the root node
+ * Return: Pointer to the data stored in the root node, or NULL if it fails
  */
 void *heap_extract(heap_t *heap)
 {
 	void *extracted_data;
-	binary_tree_node_t *last_node;
+	binary_tree_node_t *last_node, *parent;
+	size_t mask, target_idx;
 
 	if (!heap || !heap->root)
 		return (NULL);
@@ -77,21 +48,42 @@ void *heap_extract(heap_t *heap)
 	{
 		free(heap->root);
 		heap->root = NULL;
-		heap->size = 0;
+		heap->size--;
 		return (extracted_data);
 	}
 
-	last_node = get_last_node(heap->root, heap->size);
+	/* Find the last node in the heap using bitwise level-order tracking */
+	target_idx = heap->size;
+	last_node = heap->root;
+	mask = 1;
+
+	while (mask <= target_idx)
+		mask <<= 1;
+	mask >>= 2;
+
+	while (mask > 0)
+	{
+		if (target_idx & mask)
+			last_node = last_node->right;
+		else
+			last_node = last_node->left;
+		mask >>= 1;
+	}
+
+	/* Replace root data with last node data */
 	heap->root->data = last_node->data;
 
-	if (last_node->parent->left == last_node)
-		last_node->parent->left = NULL;
+	/* Disconnect last node from its parent */
+	parent = last_node->parent;
+	if (parent->left == last_node)
+		parent->left = NULL;
 	else
-		last_node->parent->right = NULL;
+		parent->right = NULL;
 
 	free(last_node);
 	heap->size--;
 
+	/* Restore min-heap ordering */
 	bubble_down(heap, heap->root);
 
 	return (extracted_data);
