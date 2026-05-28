@@ -23,13 +23,13 @@ int freq_cmp(void *p1, void *p2)
 	if (sym1->freq != sym2->freq)
 		return ((int)(sym1->freq - sym2->freq));
 
-	/* 2. Secondary check: Prioritize internal nodes ($) over leaves */
+	/* 2. Secondary check: Prioritize leaves over internal nodes ($) */
 	if (sym1->data == '$' && sym2->data != '$')
-		return (-1);
-	if (sym1->data != '$' && sym2->data == '$')
 		return (1);
+	if (sym1->data != '$' && sym2->data == '$')
+		return (-1);
 
-	/* 3. Leave natural arrival order for matching frequencies */
+	/* 3. Maintain stable queue arrival order for identical leaves */
 	return (0);
 }
 
