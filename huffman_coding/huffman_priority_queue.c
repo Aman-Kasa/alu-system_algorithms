@@ -96,7 +96,7 @@ heap_t *huffman_priority_queue(char *data, size_t *freq, size_t size)
 		if (!heap_insert(heap, nested_node))
 		{
 			free(sym);
-			free_nested_node(heap);
+			free(nested_node);
 			free_failed_queue(heap);
 			return (NULL);
 		}
