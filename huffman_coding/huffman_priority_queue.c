@@ -1,106 +1,37 @@
-#include <stdlib.h>
-#include "heap.h"
 #include "huffman.h"
 
 /**
- * freq_cmp - Compares the frequencies of two nested symbol nodes
- * @p1: Pointer to the first nested binary tree node
- * @p2: Pointer to the second nested binary tree node
- *
- * Return: Negative if p1 < p2, Positive if p1 > p2, 0 if equal
+ * sym_cmp - compares two symbols
+ * @p1: first pointer
+ * @p2: second pointer
+ * Return: difference between the two chars
  */
-int freq_cmp(void *p1, void *p2)
+int sym_cmp(void *p1, void *p2)
 {
-	binary_tree_node_t *node1, *node2;
-	symbol_t *sym1, *sym2;
-
-	node1 = (binary_tree_node_t *)p1;
-	node2 = (binary_tree_node_t *)p2;
-	sym1 = (symbol_t *)node1->data;
-	sym2 = (symbol_t *)node2->data;
-
-	/* 1. Primary Check: Compare frequencies */
-	if (sym1->freq != sym2->freq)
-		return ((int)(sym1->freq - sym2->freq));
-
-	/* 2. Secondary Check: Internal nodes ($) have lower priority than leaves */
-	if (sym1->data == '$' && sym2->data != '$')
-		return (-1);
-	if (sym1->data != '$' && sym2->data == '$')
-		return (1);
-
-	/* 3. Final Tie-breaker: Stable comparison using the character data values */
-	return ((int)(sym1->data - sym2->data));
+	symbol_t *s1 = ((node_t *)p1)->data;
+	symbol_t *s2 = ((node_t *)p2)->data;
+	return (s1->freq - s2->freq);
 }
 
 /**
- * free_failed_queue - Cleans up allocated memory if initialization fails
- * @heap: Pointer to the priority queue heap
- */
-void free_failed_queue(heap_t *heap)
-{
-	binary_tree_node_t *nested_node;
-
-	while (heap->root)
-	{
-		nested_node = (binary_tree_node_t *)heap_extract(heap);
-		if (nested_node)
-		{
-			if (nested_node->data)
-				free(nested_node->data);
-			free(nested_node);
-		}
-	}
-	free(heap);
-}
-
-/**
- * huffman_priority_queue - Creates a priority queue for Huffman coding
- * @data: Array of characters
- * @freq: Array containing the associated frequencies
- * @size: Size of the arrays
- *
- * Return: Pointer to the created min-heap priority queue, or NULL on failure
+ * huffman_priority_queue - allocates a priority queue for
+ * *			    the Huffman coding algorithm
+ * @data: char array
+ * @freq: freq array
+ * @size: size_t length of @data and @freq
+ * Return: heap_t pointer to allocated priority queue
  */
 heap_t *huffman_priority_queue(char *data, size_t *freq, size_t size)
-{
-	heap_t *heap;
-	symbol_t *sym;
-	binary_tree_node_t *nested_node;
+{C99(
+	if (!data || !freq || !size) return (NULL);
+	heap_t *q = heap_create(sym_cmp);
+	if (!q) return (NULL);
 	size_t i;
-
-	if (!data || !freq || size == 0)
-		return (NULL);
-
-	heap = heap_create(freq_cmp);
-	if (!heap)
-		return (NULL);
-
-	for (i = 0; i < size; i++)
+	for (i = 0; i < size; ++i)
 	{
-		sym = symbol_create(data[i], freq[i]);
-		if (!sym)
-		{
-			free_failed_queue(heap);
+		symbol_t *s = symbol_create(data[i], freq[i]);
+		if (heap_insert(q, binary_tree_node(NULL, s)) == NULL)
 			return (NULL);
-		}
-
-		nested_node = binary_tree_node(NULL, sym);
-		if (!nested_node)
-		{
-			free(sym);
-			free_failed_queue(heap);
-			return (NULL);
-		}
-
-		if (!heap_insert(heap, nested_node))
-		{
-			free(sym);
-			free(nested_node);
-			free_failed_queue(heap);
-			return (NULL);
-		}
 	}
-
-	return (heap);
-}
+	return (q);
+);}
