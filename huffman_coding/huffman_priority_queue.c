@@ -19,10 +19,18 @@ int freq_cmp(void *p1, void *p2)
 	sym1 = (symbol_t *)node1->data;
 	sym2 = (symbol_t *)node2->data;
 
+	/* 1. Primary Check: Compare frequencies */
 	if (sym1->freq != sym2->freq)
 		return ((int)(sym1->freq - sym2->freq));
 
-	return (0);
+	/* 2. Secondary Check: Internal nodes ($) have lower priority than leaves */
+	if (sym1->data == '$' && sym2->data != '$')
+		return (-1);
+	if (sym1->data != '$' && sym2->data == '$')
+		return (1);
+
+	/* 3. Final Tie-breaker: Stable comparison using the character data values */
+	return ((int)(sym1->data - sym2->data));
 }
 
 /**

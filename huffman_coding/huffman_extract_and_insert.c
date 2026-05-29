@@ -38,8 +38,8 @@ int huffman_extract_and_insert(heap_t *p_queue)
 		return (0);
 	}
 
-	parent->left = second;
-	parent->right = first;
+	parent->left = first;
+	parent->right = second;
 	first->parent = parent;
 	second->parent = parent;
 
