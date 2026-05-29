@@ -1,81 +1,60 @@
 #include <stdlib.h>
 #include <stdio.h>
+#include "heap.h"
 #include "huffman.h"
 
 /**
- * free_huffman_tree - Helper logic to free the generated huffman tree safely
- * @node: Root node of the tree
+ * traverse_tree - Recursively traverses a Huffman tree to print codes
+ * @root: Pointer to the current node
+ * @code: Character buffer storing the current path ('0's and '1's)
+ * @depth: Current depth in the tree (index in the buffer)
  */
-void free_huffman_tree(binary_tree_node_t *node)
+void traverse_tree(binary_tree_node_t *root, char *code, int depth)
 {
-	if (!node)
-		return;
-	free_huffman_tree(node->left);
-	free_huffman_tree(node->right);
-	free(node->data);
-	free(node);
-}
+	symbol_t *sym;
 
-/**
- * print_codes - Traverses tree recursively and generates code sequences
- * @root: Current binary tree node pointer
- * @code: Array tracking characters of the path string
- * @depth: Current depth index tracking path sequence
- */
-void print_codes(binary_tree_node_t *root, char *code, int depth)
-{
 	if (!root)
 		return;
 
+	sym = (symbol_t *)root->data;
+
+	/* If it's a leaf node, print its data and code path */
 	if (!root->left && !root->right)
 	{
 		code[depth] = '\0';
-		printf("%c: %s\n", ((symbol_t *)root->data)->data, code);
+		printf("%c: %s\n", sym->data, code);
 		return;
 	}
 
+	/* Go Left and append '0' */
 	if (root->left)
 	{
 		code[depth] = '0';
-		print_codes(root->left, code, depth + 1);
+		traverse_tree(root->left, code, depth + 1);
 	}
+
+	/* Go Right and append '1' */
 	if (root->right)
 	{
 		code[depth] = '1';
-		print_codes(root->right, code, depth + 1);
+		traverse_tree(root->right, code, depth + 1);
 	}
 }
 
 /**
- * huffman_codes - Builds the tree and prints the code allocations
- * @data: Array of characters
- * @freq: Array containing frequencies
- * @size: Size of input elements
+ * huffman_codes - Generates and prints the Huffman codes from a Huffman tree
+ * @root: Pointer to the root node of the Huffman tree
  *
  * Return: 1 on success, 0 on failure
  */
-int huffman_codes(char *data, size_t *freq, size_t size)
+int huffman_codes(binary_tree_node_t *root)
 {
-	binary_tree_node_t *root;
-	char *code_buffer;
+	char code_buffer[1024];
 
-	if (!data || !freq || size == 0)
-		return (0);
-
-	root = huffman_tree(data, freq, size);
 	if (!root)
 		return (0);
 
-	code_buffer = malloc(sizeof(char) * (size + 1));
-	if (!code_buffer)
-	{
-		free_huffman_tree(root);
-		return (0);
-	}
+	traverse_tree(root, code_buffer, 0);
 
-	print_codes(root, code_buffer, 0);
-
-	free(code_buffer);
-	free_huffman_tree(root);
 	return (1);
 }

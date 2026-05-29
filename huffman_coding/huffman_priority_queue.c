@@ -29,9 +29,9 @@ int freq_cmp(void *p1, void *p2)
 	if (sym1->data != '$' && sym2->data == '$')
 		return (-1);
 
-	/* 3. Final Tie-breaker: Fall back to character data values */
-	if (sym1->data != sym2->data)
-		return ((int)(sym1->data - sym2->data));
+	/* 3. Final Tie-breaker: Reverse char sort to match stable heap extraction */
+	if (sym1->data != '$' && sym2->data != '$')
+		return ((int)(sym2->data - sym1->data));
 
 	return (0);
 }
@@ -99,7 +99,7 @@ heap_t *huffman_priority_queue(char *data, size_t *freq, size_t size)
 		if (!heap_insert(heap, nested_node))
 		{
 			free(sym);
-			free(nested_node);
+			free_nested_node(heap);
 			free_failed_queue(heap);
 			return (NULL);
 		}
