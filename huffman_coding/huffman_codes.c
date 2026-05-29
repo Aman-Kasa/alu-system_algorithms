@@ -4,7 +4,7 @@
 #include "huffman.h"
 
 /**
- * free_huffman_tree - Recursively deallocates all nodes and symbols in the tree
+ * free_huffman_tree -Recursively deallocates allnodes and symbols in the tree
  * @root: Root node of the tree to free
  */
 void free_huffman_tree(binary_tree_node_t *root)
