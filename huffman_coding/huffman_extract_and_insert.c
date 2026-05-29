@@ -21,11 +21,7 @@ int huffman_extract_and_insert(heap_t *p_queue)
 	if (!first || !second)
 	{
 		if (first)
-		{
-			if (first->data)
-				free(first->data);
-			free(first);
-		}
+			free(first->data), free(first);
 		return (0);
 	}
 
@@ -42,15 +38,14 @@ int huffman_extract_and_insert(heap_t *p_queue)
 		return (0);
 	}
 
-	parent->left = second;
-	parent->right = first;
+	parent->left = first;
+	parent->right = second;
 	first->parent = parent;
 	second->parent = parent;
 
 	if (!heap_insert(p_queue, parent))
 	{
-		free(parent_sym);
-		free(parent);
+		free(parent_sym), free(parent);
 		return (0);
 	}
 
