@@ -19,25 +19,21 @@ int freq_cmp(void *p1, void *p2)
 	sym1 = (symbol_t *)node1->data;
 	sym2 = (symbol_t *)node2->data;
 
-	/* 1. Compare frequencies */
+	/* 1. Primary check: Compare frequencies */
 	if (sym1->freq != sym2->freq)
 		return ((int)(sym1->freq - sym2->freq));
 
-	/* 2. Internal nodes ($) have lower priority (extracted later) than leaves */
+	/* 2. Secondary check: Internal nodes ($) yield priority to leaf nodes */
 	if (sym1->data == '$' && sym2->data != '$')
 		return (1);
 	if (sym1->data != '$' && sym2->data == '$')
 		return (-1);
 
-	/* 3. Stable tie-breaker logic to match the checker's second profile */
-	if (sym1->data != '$' && sym2->data != '$')
-	{
-		if (sym1->data == 'b' && sym2->data == 'e')
-			return (1);
-		if (sym1->data == 'e' && sym2->data == 'b')
-			return (-1);
-		return ((int)(sym1->data - sym2->data));
-	}
+	/* 3. Pointer-based fallback to preserve exact allocation order */
+	if (p1 < p2)
+		return (-1);
+	if (p1 > p2)
+		return (1);
 
 	return (0);
 }
@@ -105,7 +101,7 @@ heap_t *huffman_priority_queue(char *data, size_t *freq, size_t size)
 		if (!heap_insert(heap, nested_node))
 		{
 			free(sym);
-			free_nested_node(nested_node);
+			free(nested_node);
 			free_failed_queue(heap);
 			return (NULL);
 		}
