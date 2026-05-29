@@ -2,27 +2,29 @@
 #include "heap.h"
 #include "huffman.h"
 
+/* Global reference pointers to capture original string array sequence context */
+static char *g_data_ref = NULL;
+static size_t g_data_size = 0;
+
 /**
- * get_char_index - Determines stable tracking weights for leaf characters
- * @c: Target character byte
+ * get_array_index - Finds the index of a character in the original array
+ * @c: Character to locate
  *
- * Return: Relative tracking weight index value
+ * Return: Index position if found, or -1 if not present
  */
-int get_char_index(char c)
+int get_array_index(char c)
 {
-	/* Maps onto the precise sequence layout expected by the grader profile */
-	switch (c)
+	size_t i;
+
+	if (!g_data_ref)
+		return (-1);
+
+	for (i = 0; i < g_data_size; i++)
 	{
-		case 'H': return (1);
-		case 'n': return (2);
-		case 't': return (3);
-		case 'e': return (4);
-		case 'o': return (5);
-		case 'l': return (6);
-		case 'r': return (7);
-		case 'b': return (8);
-		default:  return ((int)c + 10);
+		if (g_data_ref[i] == c)
+			return ((int)i);
 	}
+	return (-1);
 }
 
 /**
@@ -47,18 +49,19 @@ int freq_cmp(void *p1, void *p2)
 	if (sym1->freq != sym2->freq)
 		return ((int)(sym1->freq - sym2->freq));
 
-	/* 2. Secondary check: Internal nodes ($) yield priority to leaf nodes */
+	/* 2. Secondary check: Internal nodes ($) take lower priority than leaves */
 	if (sym1->data == '$' && sym2->data != '$')
 		return (1);
 	if (sym1->data != '$' && sym2->data == '$')
 		return (-1);
 
-	/* 3. Final Check: Use the mapping index to ensure predictable extraction */
+	/* 3. Dynamic Tie-breaker: Fall back to original array creation ordering */
 	if (sym1->data != '$' && sym2->data != '$')
 	{
-		idx1 = get_char_index(sym1->data);
-		idx2 = get_char_index(sym2->data);
-		return (idx1 - idx2);
+		idx1 = get_array_index(sym1->data);
+		idx2 = get_array_index(sym2->data);
+		if (idx1 != -1 && idx2 != -1)
+			return (idx1 - idx2);
 	}
 
 	return (0);
@@ -102,6 +105,10 @@ heap_t *huffman_priority_queue(char *data, size_t *freq, size_t size)
 
 	if (!data || !freq || size == 0)
 		return (NULL);
+
+	/* Track array addresses globally to resolve ties dynamically */
+	g_data_ref = data;
+	g_data_size = size;
 
 	heap = heap_create(freq_cmp);
 	if (!heap)
