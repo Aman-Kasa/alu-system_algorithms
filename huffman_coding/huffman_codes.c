@@ -4,12 +4,12 @@
 #include "huffman.h"
 
 /**
- * print_codes_recursive - Traverses the Huffman tree to print character codes
- * @root: Pointer to the current node in the Huffman tree
- * @buffer: Buffer array to accumulate path string characters
- * @depth: Current depth level within the traversal path
+ * traverse_and_print - Recursively crawls the Huffman tree to print codes
+ * @root: Pointer to the current tree node
+ * @code: Character buffer tracking the current path bits
+ * @depth: Current depth index in the bit string
  */
-void print_codes_recursive(binary_tree_node_t *root, char *buffer, int depth)
+void traverse_and_print(binary_tree_node_t *root, char *code, int depth)
 {
 	symbol_t *sym;
 
@@ -18,51 +18,33 @@ void print_codes_recursive(binary_tree_node_t *root, char *buffer, int depth)
 
 	sym = (symbol_t *)root->data;
 
-	/* Leaf node validation check */
+	/* If it's a leaf node, terminate the string and print the code */
 	if (!root->left && !root->right)
 	{
-		buffer[depth] = '\0';
-		if (sym && sym->data != '$' && sym->data != -1)
-			printf("%c: %s\n", sym->data, buffer);
+		code[depth] = '\0';
+		printf("%c: %s\n", sym->data, code);
 		return;
 	}
 
-	/* Go left: Append '0' */
+	/* Traverse Left path (append '0') */
 	if (root->left)
 	{
-		buffer[depth] = '0';
-		print_codes_recursive(root->left, buffer, depth + 1);
+		code[depth] = '0';
+		traverse_and_print(root->left, code, depth + 1);
 	}
 
-	/* Go right: Append '1' */
+	/* Traverse Right path (append '1') */
 	if (root->right)
 	{
-		buffer[depth] = '1';
-		print_codes_recursive(root->right, buffer, depth + 1);
+		code[depth] = '1';
+		traverse_and_print(root->right, code, depth + 1);
 	}
-}
-
-/**
- * free_huffman_tree_nodes - Performs depth-first manual memory cleanups
- * @root: Pointer to the current active tree node element
- */
-void free_huffman_tree_nodes(binary_tree_node_t *root)
-{
-	if (!root)
-		return;
-
-	free_huffman_tree_nodes(root->left);
-	free_huffman_tree_nodes(root->right);
-
-	if (root->data)
-		free(root->data);
-	free(root);
 }
 
 /**
  * huffman_codes - Builds a Huffman tree and prints codes for each symbol
- * @data: Array of characters of size size
- * @freq: Array containing the associated frequencies
+ * @data: Array of characters
+ * @freq: Array of associated frequencies
  * @size: Size of the arrays
  *
  * Return: 1 on success, 0 on failure
@@ -70,30 +52,28 @@ void free_huffman_tree_nodes(binary_tree_node_t *root)
 int huffman_codes(char *data, size_t *freq, size_t size)
 {
 	binary_tree_node_t *root;
-	char *buffer;
+	char *code_buffer;
 
 	if (!data || !freq || size == 0)
 		return (0);
 
-	/* Build the complete Huffman tree from components */
+	/* 1. Build the exact Huffman Tree using your stable builder */
 	root = huffman_tree(data, freq, size);
 	if (!root)
 		return (0);
 
-	/* Allocate a traversal code path layout buffer (max depth is size) */
-	buffer = malloc(sizeof(char) * (size + 1));
-	if (!buffer)
+	/* 2. Allocate a bit buffer safe for maximum theoretical tree depth */
+	code_buffer = malloc(sizeof(char) * (size + 1));
+	if (!code_buffer)
 	{
-		free_huffman_tree_nodes(root);
 		return (0);
 	}
 
-	/* Walk the tree and print the final codes */
-	print_codes_recursive(root, buffer, 0);
+	/* 3. Run the organized leaf traversal printer */
+	traverse_and_print(root, code_buffer, 0);
 
-	/* Clean up all memory allocations to satisfy Valgrind */
-	free(buffer);
-	free_huffman_tree_nodes(root);
+	/* 4. Clean up allocated path tracking structures */
+	free(code_buffer);
 
 	return (1);
 }
