@@ -29,7 +29,10 @@ int freq_cmp(void *p1, void *p2)
 	if (sym1->data != '$' && sym2->data == '$')
 		return (-1);
 
-	/* 3. Maintain stable queue arrival order for identical leaves */
+	/* 3. Final Tie-breaker: Fall back to character data values */
+	if (sym1->data != sym2->data)
+		return ((int)(sym1->data - sym2->data));
+
 	return (0);
 }
 
