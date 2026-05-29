@@ -23,11 +23,15 @@ int freq_cmp(void *p1, void *p2)
 	if (sym1->freq != sym2->freq)
 		return ((int)(sym1->freq - sym2->freq));
 
-	/* 2. Secondary check: Prioritize leaf nodes over internal nodes ($) */
+	/* 2. Secondary check: Handle internal node '$' ties vs leaf nodes */
 	if (sym1->data == '$' && sym2->data != '$')
 		return (1);
 	if (sym1->data != '$' && sym2->data == '$')
 		return (-1);
+
+	/* 3. Final check: Alphanumeric sorting fallback for leaves */
+	if (sym1->data != '$' && sym2->data != '$')
+		return ((int)(sym1->data - sym2->data));
 
 	return (0);
 }
@@ -66,7 +70,7 @@ heap_t *huffman_priority_queue(char *data, size_t *freq, size_t size)
 	heap_t *heap;
 	symbol_t *sym;
 	binary_tree_node_t *nested_node;
-	long int i;
+	size_t i;
 
 	if (!data || !freq || size == 0)
 		return (NULL);
@@ -75,8 +79,8 @@ heap_t *huffman_priority_queue(char *data, size_t *freq, size_t size)
 	if (!heap)
 		return (NULL);
 
-	/* Loop backward to establish the expected stable queue order */
-	for (i = (long int)size - 1; i >= 0; i--)
+	/* Loop forward strictly to preserve original sequence parsing order */
+	for (i = 0; i < size; i++)
 	{
 		sym = symbol_create(data[i], freq[i]);
 		if (!sym)
