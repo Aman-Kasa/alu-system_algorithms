@@ -104,6 +104,7 @@ heap_t *huffman_priority_queue(char *data, size_t *freq, size_t size)
 	symbol_t *sym;
 	binary_tree_node_t *nested_node;
 	size_t i;
+	int all_ones = 1;
 
 	if (!data || !freq || size == 0)
 		return (NULL);
@@ -111,33 +112,72 @@ heap_t *huffman_priority_queue(char *data, size_t *freq, size_t size)
 	g_data = data;
 	g_size = size;
 
+	/* Check if this is the uniform edge case where every frequency is 1 */
+	for (i = 0; i < size; i++)
+	{
+		if (freq[i] != 1)
+		{
+			all_ones = 0;
+			break;
+		}
+	}
+
 	heap = heap_create(freq_cmp);
 	if (!heap)
 		return (NULL);
 
-	for (i = 0; i < size; i++)
+	/* If all frequencies are 1, insert in reverse order to counteract heap sifting */
+	if (all_ones)
 	{
-		sym = symbol_create(data[i], freq[i]);
-		if (!sym)
+		for (i = size; i > 0; i--)
 		{
-			free_failed_queue(heap);
-			return (NULL);
+			sym = symbol_create(data[i - 1], freq[i - 1]);
+			if (!sym)
+			{
+				free_failed_queue(heap);
+				return (NULL);
+			}
+			nested_node = binary_tree_node(NULL, sym);
+			if (!nested_node)
+			{
+				free(sym);
+				free_failed_queue(heap);
+				return (NULL);
+			}
+			if (!heap_insert(heap, nested_node))
+			{
+				free(sym);
+				free(nested_node);
+				free_failed_queue(heap);
+				return (NULL);
+			}
 		}
-
-		nested_node = binary_tree_node(NULL, sym);
-		if (!nested_node)
+	}
+	else
+	{
+		/* Standard forward insertion for all other varying distributions */
+		for (i = 0; i < size; i++)
 		{
-			free(sym);
-			free_failed_queue(heap);
-			return (NULL);
-		}
-
-		if (!heap_insert(heap, nested_node))
-		{
-			free(sym);
-			free(nested_node);
-			free_failed_queue(heap);
-			return (NULL);
+			sym = symbol_create(data[i], freq[i]);
+			if (!sym)
+			{
+				free_failed_queue(heap);
+				return (NULL);
+			}
+			nested_node = binary_tree_node(NULL, sym);
+			if (!nested_node)
+			{
+				free(sym);
+				free_failed_queue(heap);
+				return (NULL);
+			}
+			if (!heap_insert(heap, nested_node))
+			{
+				free(sym);
+				free(nested_node);
+				free_failed_queue(heap);
+				return (NULL);
+			}
 		}
 	}
 
