@@ -19,7 +19,7 @@ int freq_cmp(void *p1, void *p2)
 	sym1 = (symbol_t *)node1->data;
 	sym2 = (symbol_t *)node2->data;
 
-	/* 1. Primary check: Frequencies */
+	/* 1. Primary check: Compare raw frequency totals */
 	if (sym1->freq != sym2->freq)
 		return ((int)(sym1->freq - sym2->freq));
 
@@ -29,7 +29,7 @@ int freq_cmp(void *p1, void *p2)
 	if (sym1->data != '$' && sym2->data == '$')
 		return (-1);
 
-	/* 3. Final check: Alphanumeric sorting fallback for leaves */
+	/* 3. Final Tie-breaker: Explicit alphabetical sorting fallback for leaves */
 	if (sym1->data != '$' && sym2->data != '$')
 		return ((int)(sym1->data - sym2->data));
 
@@ -79,7 +79,6 @@ heap_t *huffman_priority_queue(char *data, size_t *freq, size_t size)
 	if (!heap)
 		return (NULL);
 
-	/* Loop forward strictly to preserve original sequence parsing order */
 	for (i = 0; i < size; i++)
 	{
 		sym = symbol_create(data[i], freq[i]);

@@ -1,46 +1,58 @@
 #include <stdlib.h>
+#include "heap.h"
 #include "huffman.h"
-#include "heap/heap.h"
 
 /**
- * huffman_extract_and_insert - Extracts two nodes and inserts a new parent node
- * @priority_queue: Pointer to the priority queue
+ * huffman_extract_and_insert - Extracts two nodes and inserts a parent node
+ * @p_queue: Pointer to the priority queue min-heap
  *
  * Return: 1 on success, 0 on failure
  */
-int huffman_extract_and_insert(heap_t *priority_queue)
+int huffman_extract_and_insert(heap_t *p_queue)
 {
-	binary_tree_node_t *left_nested, *right_nested, *parent_nested;
-	symbol_t *sum_sym;
+	binary_tree_node_t *first, *second, *parent;
+	symbol_t *sym1, *sym2, *parent_sym;
 
-	if (!priority_queue || priority_queue->size < 2)
+	if (!p_queue || !p_queue->root)
 		return (0);
 
-	left_nested = (binary_tree_node_t *)heap_extract(priority_queue);
-	right_nested = (binary_tree_node_t *)heap_extract(priority_queue);
-
-	if (!left_nested || !right_nested)
-		return (0);
-
-	sum_sym = symbol_create('$', ((symbol_t *)left_nested->data)->freq +
-			     ((symbol_t *)right_nested->data)->freq);
-	if (!sum_sym)
-		return (0);
-
-	parent_nested = binary_tree_node(NULL, sum_sym);
-	if (!parent_nested)
+	first = (binary_tree_node_t *)heap_extract(p_queue);
+	second = (binary_tree_node_t *)heap_extract(p_queue);
+	if (!first || !second)
 	{
-		free(sum_sym);
+		if (first)
+		{
+			if (first->data)
+				free(first->data);
+			free(first);
+		}
 		return (0);
 	}
 
-	parent_nested->left = left_nested;
-	parent_nested->right = right_nested;
-	left_nested->parent = parent_nested;
-	right_nested->parent = parent_nested;
-
-	if (!heap_insert(priority_queue, parent_nested))
+	sym1 = (symbol_t *)first->data;
+	sym2 = (symbol_t *)second->data;
+	parent_sym = symbol_create('$', sym1->freq + sym2->freq);
+	if (!parent_sym)
 		return (0);
+
+	parent = binary_tree_node(NULL, parent_sym);
+	if (!parent)
+	{
+		free(parent_sym);
+		return (0);
+	}
+
+	parent->left = second;
+	parent->right = first;
+	first->parent = parent;
+	second->parent = parent;
+
+	if (!heap_insert(p_queue, parent))
+	{
+		free(parent_sym);
+		free(parent);
+		return (0);
+	}
 
 	return (1);
 }

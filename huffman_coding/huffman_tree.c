@@ -18,12 +18,10 @@ binary_tree_node_t *huffman_tree(char *data, size_t *freq, size_t size)
 	if (!data || !freq || size == 0)
 		return (NULL);
 
-	/* Create priority queue from data and frequencies */
 	pq = huffman_priority_queue(data, freq, size);
 	if (!pq)
 		return (NULL);
 
-	/* Combine nodes until only 1 root node remains in the queue */
 	while (pq->root && (pq->root->left || pq->root->right))
 	{
 		if (!huffman_extract_and_insert(pq))
@@ -33,13 +31,11 @@ binary_tree_node_t *huffman_tree(char *data, size_t *freq, size_t size)
 		}
 	}
 
-	/* Extract the Huffman tree root nested inside the last node */
 	if (pq->root)
 	{
 		root = (binary_tree_node_t *)pq->root->data;
 	}
 
-	/* Use heap_delete to clear internal heap arrays safely */
 	heap_delete(pq, NULL);
 
 	return (root);
