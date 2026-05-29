@@ -84,7 +84,6 @@ int huffman_codes(char *data, size_t *freq, size_t size)
 
 	traverse_and_print(root, code_buffer, 0);
 
-	/* Clean up everything completely to guarantee 0 bytes left in use */
 	free(code_buffer);
 	free_huffman_tree(root);
 

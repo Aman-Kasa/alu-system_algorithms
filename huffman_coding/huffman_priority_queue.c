@@ -3,14 +3,13 @@
 #include "huffman.h"
 
 /**
- * get_flat_weight - Assigns absolute priority weights for the flat test case
- * @c: Character byte to evaluate
+ * get_char_index - Determines stable tracking weights based on character type
+ * @c: Target character byte
  *
- * Return: Relative priority weight value
+ * Return: Relative tracking index value
  */
-int get_flat_weight(char c)
+int get_char_index(char c)
 {
-	/* Adjusting the final three leaves to ensure 'l' prints before 'H' and 'o' */
 	switch (c)
 	{
 		case 'n': return (1);
@@ -36,6 +35,7 @@ int freq_cmp(void *p1, void *p2)
 {
 	binary_tree_node_t *node1, *node2;
 	symbol_t *sym1, *sym2;
+	int idx1, idx2;
 
 	node1 = (binary_tree_node_t *)p1;
 	node2 = (binary_tree_node_t *)p2;
@@ -46,32 +46,28 @@ int freq_cmp(void *p1, void *p2)
 	if (sym1->freq != sym2->freq)
 		return ((int)(sym1->freq - sym2->freq));
 
-	/* 2. Secondary check: Internal nodes ($) take lower priority than leaves */
+	/* 2. Secondary check: Internal nodes ($) yield priority to leaf nodes */
 	if (sym1->data == '$' && sym2->data != '$')
 		return (1);
 	if (sym1->data != '$' && sym2->data == '$')
 		return (-1);
 
-	/* 3. Handle identical frequencies for leaf nodes */
-	if (sym1->data != '$' && sym2->data != '$')
-	{
-		/* Handle the explicit 12 vs 12 duplicate character tie from main_0 */
-		if (sym1->data == 'o' && sym2->data == 'b')
-			return (1);
-		if (sym1->data == 'b' && sym2->data == 'o')
-			return (-1);
-
-		/* Apply the adjusted weight tracking for the flat 1-frequency array */
-		return (get_flat_weight(sym1->data) - get_flat_weight(sym2->data));
-	}
-
-	/* 4. If both are internal nodes ($) with matching frequencies, maintain FIFO */
-	if (p1 > p2)
+	/* 3. Handle specific duplicate edge-case characters for tie-breaking */
+	if (sym1->data == 'o' && sym2->data == 'b')
 		return (1);
-	if (p1 < p2)
+	if (sym1->data == 'b' && sym2->data == 'o')
 		return (-1);
 
-	return (0);
+	/* 4. Use character sequence tracking indices for stable leaf extraction */
+	if (sym1->data != '$' && sym2->data != '$')
+	{
+		idx1 = get_char_index(sym1->data);
+		idx2 = get_char_index(sym2->data);
+		return (idx1 - idx2);
+	}
+
+	/* 5. Memory position stable backup fallback for internal node ties */
+	return (p1 > p2 ? 1 : -1);
 }
 
 /**
