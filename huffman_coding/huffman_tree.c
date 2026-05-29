@@ -1,13 +1,14 @@
-#include "huffman.h"
 #include <stdlib.h>
+#include "heap.h"
+#include "huffman.h"
 
 /**
- * huffman_tree - builds a Huffman tree from characters and their frequencies
- * @data: array of characters
- * @freq: array of frequencies (same size as data)
- * @size: number of elements in data and freq
+ * huffman_tree - Builds a Huffman tree from characters and their frequencies
+ * @data: Array of characters
+ * @freq: Array of frequencies (same size as data)
+ * @size: Number of elements in data and freq
  *
- * Return: pointer to root of Huffman tree, or NULL on failure
+ * Return: Pointer to root of Huffman tree, or NULL on failure
  */
 binary_tree_node_t *huffman_tree(char *data, size_t *freq, size_t size)
 {
@@ -17,21 +18,29 @@ binary_tree_node_t *huffman_tree(char *data, size_t *freq, size_t size)
 	if (!data || !freq || size == 0)
 		return (NULL);
 
-	/* create priority queue (min heap) */
+	/* Create priority queue (min heap) */
 	q = huffman_priority_queue(data, freq, size);
 	if (!q)
 		return (NULL);
 
-	/* repeatedly extract two smallest nodes and merge until one node remains */
-	while (q->size > 1)
-		huffman_extract_and_insert(q);
+	/* Repeatedly extract two smallest nodes and merge until one node remains */
+	while (q->root && (q->root->left || q->root->right))
+	{
+		if (!huffman_extract_and_insert(q))
+		{
+			heap_delete(q, NULL);
+			return (NULL);
+		}
+	}
 
-	/* the remaining node in the heap is the root of the Huffman tree */
-	root = (binary_tree_node_t *)q->root->data;
+	/* The remaining node inside the priority queue heap holds our root */
+	if (q->root)
+		root = (binary_tree_node_t *)q->root->data;
+	else
+		root = NULL;
 
-	/* free the heap structure (not the node itself) */
-	free(q->root);
-	free(q);
+	/* Safe structural cleanup without destroying the target tree memory */
+	heap_delete(q, NULL);
 
 	return (root);
 }
