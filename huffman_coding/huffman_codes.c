@@ -4,6 +4,23 @@
 #include "huffman.h"
 
 /**
+ * free_huffman_tree - Recursively deallocates all nodes and symbols in the tree
+ * @root: Root node of the tree to free
+ */
+void free_huffman_tree(binary_tree_node_t *root)
+{
+	if (!root)
+		return;
+
+	free_huffman_tree(root->left);
+	free_huffman_tree(root->right);
+
+	if (root->data)
+		free(root->data);
+	free(root);
+}
+
+/**
  * traverse_and_print - Recursively crawls the Huffman tree to print codes
  * @root: Pointer to the current tree node
  * @code: Character buffer tracking the current path bits
@@ -18,7 +35,6 @@ void traverse_and_print(binary_tree_node_t *root, char *code, int depth)
 
 	sym = (symbol_t *)root->data;
 
-	/* If it's a leaf node, terminate the string and print the code */
 	if (!root->left && !root->right)
 	{
 		code[depth] = '\0';
@@ -26,14 +42,12 @@ void traverse_and_print(binary_tree_node_t *root, char *code, int depth)
 		return;
 	}
 
-	/* Traverse Left path (append '0') */
 	if (root->left)
 	{
 		code[depth] = '0';
 		traverse_and_print(root->left, code, depth + 1);
 	}
 
-	/* Traverse Right path (append '1') */
 	if (root->right)
 	{
 		code[depth] = '1';
@@ -57,23 +71,22 @@ int huffman_codes(char *data, size_t *freq, size_t size)
 	if (!data || !freq || size == 0)
 		return (0);
 
-	/* 1. Build the exact Huffman Tree using your stable builder */
 	root = huffman_tree(data, freq, size);
 	if (!root)
 		return (0);
 
-	/* 2. Allocate a bit buffer safe for maximum theoretical tree depth */
 	code_buffer = malloc(sizeof(char) * (size + 1));
 	if (!code_buffer)
 	{
+		free_huffman_tree(root);
 		return (0);
 	}
 
-	/* 3. Run the organized leaf traversal printer */
 	traverse_and_print(root, code_buffer, 0);
 
-	/* 4. Clean up allocated path tracking structures */
+	/* Clean up everything completely to guarantee 0 bytes left in use */
 	free(code_buffer);
+	free_huffman_tree(root);
 
 	return (1);
 }
