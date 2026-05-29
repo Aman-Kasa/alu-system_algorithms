@@ -29,9 +29,9 @@ int freq_cmp(void *p1, void *p2)
 	if (sym1->data != '$' && sym2->data == '$')
 		return (-1);
 
-	/* 3. Final Tie-breaker: Reverse char sort to match stable heap extraction */
+	/* 3. Final Tie-breaker: Standard alphabetical sort for matching leaves */
 	if (sym1->data != '$' && sym2->data != '$')
-		return ((int)(sym2->data - sym1->data));
+		return ((int)(sym1->data - sym2->data));
 
 	return (0);
 }
