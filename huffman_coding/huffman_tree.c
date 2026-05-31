@@ -22,7 +22,7 @@ binary_tree_node_t *huffman_tree(char *data, size_t *freq, size_t size)
 	if (!q)
 		return (NULL);
 
-	while (q->root && (q->root->left || q->root->right))
+	while (q->size > 1)
 	{
 		if (!huffman_extract_and_insert(q))
 		{

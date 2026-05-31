@@ -27,7 +27,7 @@ int huffman_extract_and_insert(heap_t *p_queue)
 
 	sym1 = (symbol_t *)first->data;
 	sym2 = (symbol_t *)second->data;
-	parent_sym = symbol_create('$', sym1->freq + sym2->freq);
+	parent_sym = symbol_create(-1, sym1->freq + sym2->freq);
 	if (!parent_sym)
 		return (0);
 

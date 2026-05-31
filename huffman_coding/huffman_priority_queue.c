@@ -23,6 +23,16 @@ int freq_cmp(void *p1, void *p2)
 }
 
 /**
+ * next_order - Stub for compatibility with huffman_extract_and_insert
+ *
+ * Return: 0
+ */
+size_t next_order(void)
+{
+	return (0);
+}
+
+/**
  * free_failed_queue - Cleans up allocated memory if initialization fails
  * @heap: Pointer to the priority queue heap
  */
