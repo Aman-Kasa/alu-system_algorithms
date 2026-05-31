@@ -19,15 +19,7 @@ int freq_cmp(void *p1, void *p2)
 	sym1 = (symbol_t *)node1->data;
 	sym2 = (symbol_t *)node2->data;
 
-	if (sym1->freq != sym2->freq)
-		return ((int)(sym1->freq - sym2->freq));
-
-	if (sym1->data == -1 && sym2->data != -1)
-		return (1);
-	if (sym1->data != -1 && sym2->data == -1)
-		return (-1);
-
-	return (0);
+	return ((int)(sym1->freq - sym2->freq));
 }
 
 /**
