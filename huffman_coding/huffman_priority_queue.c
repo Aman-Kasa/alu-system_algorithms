@@ -3,28 +3,6 @@
 #include "huffman.h"
 
 /**
- * get_char_index - Determines stable tracking weights based on character type
- * @c: Target character byte
- *
- * Return: Relative tracking index value
- */
-int get_char_index(char c)
-{
-	switch (c)
-	{
-		case 'n': return (1);
-		case 'e': return (2);
-		case 't': return (3);
-		case 'r': return (4);
-		case 'b': return (5);
-		case 'o': return (6);
-		case 'l': return (7);
-		case 'H': return (8);
-		default:  return ((int)c + 10);
-	}
-}
-
-/**
  * freq_cmp - Compares the frequencies of two nested symbol nodes
  * @p1: Pointer to the first nested binary tree node
  * @p2: Pointer to the second nested binary tree node
@@ -35,39 +13,21 @@ int freq_cmp(void *p1, void *p2)
 {
 	binary_tree_node_t *node1, *node2;
 	symbol_t *sym1, *sym2;
-	int idx1, idx2;
 
 	node1 = (binary_tree_node_t *)p1;
 	node2 = (binary_tree_node_t *)p2;
 	sym1 = (symbol_t *)node1->data;
 	sym2 = (symbol_t *)node2->data;
 
-	/* 1. Primary check: Compare frequencies */
 	if (sym1->freq != sym2->freq)
 		return ((int)(sym1->freq - sym2->freq));
 
-	/* 2. Secondary check: Internal nodes ($) yield priority to leaf nodes */
-	if (sym1->data == '$' && sym2->data != '$')
+	if (sym1->data == -1 && sym2->data != -1)
 		return (1);
-	if (sym1->data != '$' && sym2->data == '$')
+	if (sym1->data != -1 && sym2->data == -1)
 		return (-1);
 
-	/* 3. Handle specific duplicate edge-case characters for tie-breaking */
-	if (sym1->data == 'o' && sym2->data == 'b')
-		return (1);
-	if (sym1->data == 'b' && sym2->data == 'o')
-		return (-1);
-
-	/* 4. Use character sequence tracking indices for stable leaf extraction */
-	if (sym1->data != '$' && sym2->data != '$')
-	{
-		idx1 = get_char_index(sym1->data);
-		idx2 = get_char_index(sym2->data);
-		return (idx1 - idx2);
-	}
-
-	/* 5. Memory position stable backup fallback for internal node ties */
-	return (p1 > p2 ? 1 : -1);
+	return (0);
 }
 
 /**
