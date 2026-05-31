@@ -43,8 +43,6 @@ int huffman_extract_and_insert(heap_t *p_queue)
 	first->parent = parent;
 	second->parent = parent;
 
-	parent->parent = (binary_tree_node_t *)next_order();
-
 	if (!heap_insert(p_queue, parent))
 	{
 		free(parent_sym), free(parent);

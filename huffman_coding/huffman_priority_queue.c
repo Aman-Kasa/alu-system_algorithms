@@ -2,10 +2,8 @@
 #include "heap.h"
 #include "huffman.h"
 
-static size_t g_order;
-
 /**
- * freq_cmp - Compares two nested symbol nodes by frequency then insert order
+ * freq_cmp - Compares the frequencies of two nested symbol nodes
  * @p1: Pointer to the first nested binary tree node
  * @p2: Pointer to the second nested binary tree node
  *
@@ -15,37 +13,13 @@ int freq_cmp(void *p1, void *p2)
 {
 	binary_tree_node_t *node1, *node2;
 	symbol_t *sym1, *sym2;
-	size_t order1, order2;
 
 	node1 = (binary_tree_node_t *)p1;
 	node2 = (binary_tree_node_t *)p2;
 	sym1 = (symbol_t *)node1->data;
 	sym2 = (symbol_t *)node2->data;
 
-	if (sym1->freq != sym2->freq)
-		return ((int)(sym1->freq - sym2->freq));
-
-	if (sym1->data == -1 && sym2->data != -1)
-		return (1);
-	if (sym1->data != -1 && sym2->data == -1)
-		return (-1);
-
-	order1 = (size_t)node1->parent;
-	order2 = (size_t)node2->parent;
-	if (order1 != order2)
-		return (order1 > order2 ? -1 : 1);
-
-	return (0);
-}
-
-/**
- * next_order - Returns next insertion order value
- *
- * Return: Next order value
- */
-size_t next_order(void)
-{
-	return (++g_order);
+	return ((int)(sym1->freq - sym2->freq));
 }
 
 /**
@@ -87,7 +61,6 @@ heap_t *huffman_priority_queue(char *data, size_t *freq, size_t size)
 	if (!data || !freq || size == 0)
 		return (NULL);
 
-	g_order = 0;
 	heap = heap_create(freq_cmp);
 	if (!heap)
 		return (NULL);
@@ -108,8 +81,6 @@ heap_t *huffman_priority_queue(char *data, size_t *freq, size_t size)
 			free_failed_queue(heap);
 			return (NULL);
 		}
-
-		nested_node->parent = (binary_tree_node_t *)next_order();
 
 		if (!heap_insert(heap, nested_node))
 		{
