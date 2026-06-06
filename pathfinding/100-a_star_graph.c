@@ -92,8 +92,7 @@ static void run_astar(graph_t *graph, int *g, double *f,
 	{
 		t_name = target->content;
 		printf("Checking %s, distance to %s is %d\n",
-		       curr->content, t_name,
-		       (int)get_heuristic(curr, target));
+		       curr->content, t_name, (int)get_heuristic(curr, target));
 
 		vis[curr->index] = 1;
 
@@ -118,23 +117,6 @@ static void run_astar(graph_t *graph, int *g, double *f,
 }
 
 /**
- * init_astar_tables - Initializes arrays for the A* graph algorithm
- * @size: Total number of vertices in the graph
- * @g_score: Array tracking exact cumulative costs from start
- * @f_score: Array tracking total estimated costs (g + h)
- */
-static void init_astar_tables(size_t size, int *g_score, double *f_score)
-{
-	size_t i;
-
-	for (i = 0; i < size; i++)
-	{
-		g_score[i] = INT_MAX;
-		f_score[i] = INFINITY;
-	}
-}
-
-/**
  * a_star_graph - Finds shortest path using the A* algorithm
  * @graph: Master tracking graph structure block wrapper
  * @start: Initial node source departure configuration
@@ -150,6 +132,7 @@ queue_t *a_star_graph(graph_t *graph, vertex_t const *start,
 	double *f_score;
 	char *visited;
 	vertex_t **parent;
+	size_t i;
 
 	if (!graph || !start || !target)
 		return (NULL);
@@ -160,23 +143,31 @@ queue_t *a_star_graph(graph_t *graph, vertex_t const *start,
 	parent = calloc(graph->nb_vertices, sizeof(vertex_t *));
 	if (!path || !g_score || !f_score || !visited || !parent)
 	{
-		free(g_score); free(f_score); free(visited); free(parent);
+		free(g_score);
+		free(f_score);
+		free(visited);
+		free(parent);
 		if (path)
 			queue_delete(path);
 		return (NULL);
 	}
-	init_astar_tables(graph->nb_vertices, g_score, f_score);
+	for (i = 0; i < graph->nb_vertices; i++)
+	{
+		g_score[i] = INT_MAX;
+		f_score[i] = INFINITY;
+	}
 	g_score[start->index] = 0;
 	f_score[start->index] = get_heuristic(start, target);
-
 	run_astar(graph, g_score, f_score, visited, parent, target);
-
 	if (g_score[target->index] == INT_MAX ||
 	    !build_astar_path(target, parent, path))
 	{
 		queue_delete(path);
 		path = NULL;
 	}
-	free(g_score); free(f_score); free(visited); free(parent);
+	free(g_score);
+	free(f_score);
+	free(visited);
+	free(parent);
 	return (path);
 }
