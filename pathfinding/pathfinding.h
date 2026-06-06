@@ -4,13 +4,24 @@
 #include <stdlib.h>
 #include <stdio.h>
 
-/* Provided Queue library interface structures */
+/**
+ * struct queue_node_s - Node of a queue structure
+ *
+ * @ptr: Pointer to data stored in the node
+ * @next: Pointer to the next node in the queue
+ */
 typedef struct queue_node_s
 {
 	void *ptr;
 	struct queue_node_s *next;
 } queue_node_t;
 
+/**
+ * struct queue_s - Queue management wrapper structure
+ *
+ * @front: Pointer to the front node of the queue
+ * @rear: Pointer to the rear node of the queue
+ */
 typedef struct queue_s
 {
 	queue_node_t *front;
