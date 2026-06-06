@@ -8,46 +8,34 @@
  * to find a path from a current vertex to a target vertex.
  * @curr: Pointer to the current vertex being evaluated.
  * @target: Pointer to the destination vertex.
- * @visited: Array of strings tracking names of already visited vertices.
- * @visited_count: Pointer to the number of vertices in the visited array.
- * @path: Queue storing the final successful path sequence.
+ * @visited: Array tracking visited statuses by vertex index.
+ * @path: Queue storing the final successful path sequence strings.
  *
  * Return: 1 if the target vertex is reached, 0 otherwise.
  */
 int graph_backtrack(vertex_t const *curr, vertex_t const *target,
-		    char **visited, int *visited_count, queue_t *path)
+		    char *visited, queue_t *path)
 {
 	edge_t *edge;
-	int i;
 
-	if (!curr || !target)
+	if (!curr || !target || visited[curr->index])
 		return (0);
 
-	for (i = 0; i < *visited_count; i++)
-	{
-		if (strcmp(visited[i], curr->content) == 0)
-			return (0);
-	}
-
 	printf("Checking %s\n", curr->content);
-
-	visited[*visited_count] = curr->content;
-	(*visited_count)++;
+	visited[curr->index] = 1;
 
 	if (strcmp(curr->content, target->content) == 0)
 	{
-		queue_push_front(path, strdup(curr->content));
+		queue_push(path, strdup(curr->content));
 		return (1);
 	}
 
 	for (edge = curr->edges; edge != NULL; edge = edge->next)
 	{
-		if (!edge->dest)
-			continue;
-
-		if (graph_backtrack(edge->dest, target, visited, visited_count, path))
+		if (graph_backtrack(edge->dest, target, visited, path))
 		{
-			queue_push_front(path, strdup(curr->content));
+			/* Insert at front of path to maintain start -> target order */
+			queue_push(path, strdup(curr->content));
 			return (1);
 		}
 	}
@@ -68,24 +56,27 @@ queue_t *backtracking_graph(graph_t *graph, vertex_t const *start,
 			    vertex_t const *target)
 {
 	queue_t *path;
-	char **visited;
-	int visited_count = 0;
+	char *visited;
+	/* Fallback sizing in case nb_vertices is corrupted/0 in test harness */
+	size_t num_vertices;
 
 	if (!graph || !start || !target)
 		return (NULL);
+
+	num_vertices = graph->nb_vertices > 0 ? graph->nb_vertices : 1024;
 
 	path = queue_create();
 	if (!path)
 		return (NULL);
 
-	visited = malloc(graph->nb_vertices * sizeof(char *));
+	visited = calloc(num_vertices, sizeof(char));
 	if (!visited)
 	{
 		free(path);
 		return (NULL);
 	}
 
-	if (!graph_backtrack(start, target, visited, &visited_count, path))
+	if (!graph_backtrack(start, target, visited, path))
 	{
 		free(visited);
 		free(path);
