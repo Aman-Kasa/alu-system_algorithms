@@ -50,10 +50,17 @@ int backtrack_recursive(char **map, int rows, int cols, point_t const *curr,
 		return (append_to_path(path, curr->x, curr->y));
 
 	/* Ordered exploration direction: RIGHT, BOTTOM, LEFT, TOP */
-	neighbors[0] = (point_t){curr->x + 1, curr->y};
-	neighbors[1] = (point_t){curr->x, curr->y + 1};
-	neighbors[2] = (point_t){curr->x - 1, curr->y};
-	neighbors[3] = (point_t){curr->x, curr->y - 1};
+	neighbors[0].x = curr->x + 1;
+	neighbors[0].y = curr->y;
+
+	neighbors[1].x = curr->x;
+	neighbors[1].y = curr->y + 1;
+
+	neighbors[2].x = curr->x - 1;
+	neighbors[2].y = curr->y;
+
+	neighbors[3].x = curr->x;
+	neighbors[3].y = curr->y - 1;
 
 	for (i = 0; i < 4; i++)
 	{
