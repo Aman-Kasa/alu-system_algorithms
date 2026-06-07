@@ -23,7 +23,7 @@ int graph_backtrack(vertex_t const *curr, vertex_t const *target,
 	if (!curr || !target)
 		return (0);
 
-	/* Safely check if current city name is already tracked */
+	/* Check if current city name is already tracked */
 	for (i = 0; i < *visited_count; i++)
 	{
 		if (strcmp(visited[i], curr->content) == 0)
@@ -72,19 +72,16 @@ queue_t *backtracking_graph(graph_t *graph, vertex_t const *start,
 	queue_t *path;
 	char const **visited;
 	int visited_count = 0;
-	size_t num_vertices;
 
 	if (!graph || !start || !target)
 		return (NULL);
-
-	num_vertices = graph->nb_vertices > 0 ? graph->nb_vertices : 1024;
 
 	path = queue_create();
 	if (!path)
 		return (NULL);
 
-	/* Track using string pointers rather than dangerous internal indices */
-	visited = malloc(num_vertices * sizeof(char *));
+	/* Allocate a fixed, safe size independent of graph metadata properties */
+	visited = malloc(4096 * sizeof(char *));
 	if (!visited)
 	{
 		free(path);
