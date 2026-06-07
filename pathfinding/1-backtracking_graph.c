@@ -8,21 +8,33 @@
  * to find a path from a current vertex to a target vertex.
  * @curr: Pointer to the current vertex being evaluated.
  * @target: Pointer to the destination vertex.
- * @visited: Array tracking visited statuses by vertex index.
+ * @visited: Array of strings tracking names of already visited vertices.
+ * @visited_count: Pointer to the number of vertices in the visited array.
  * @path: Queue storing the final successful path sequence strings.
  *
  * Return: 1 if the target vertex is reached, 0 otherwise.
  */
 int graph_backtrack(vertex_t const *curr, vertex_t const *target,
-		    char *visited, queue_t *path)
+		    char const **visited, int *visited_count, queue_t *path)
 {
 	edge_t *edge;
+	int i;
 
-	if (!curr || !target || visited[curr->index])
+	if (!curr || !target)
 		return (0);
 
+	/* Safely check if current city name is already tracked */
+	for (i = 0; i < *visited_count; i++)
+	{
+		if (strcmp(visited[i], curr->content) == 0)
+			return (0);
+	}
+
 	printf("Checking %s\n", curr->content);
-	visited[curr->index] = 1;
+
+	/* Log current vertex string reference */
+	visited[*visited_count] = curr->content;
+	(*visited_count)++;
 
 	if (strcmp(curr->content, target->content) == 0)
 	{
@@ -32,7 +44,10 @@ int graph_backtrack(vertex_t const *curr, vertex_t const *target,
 
 	for (edge = curr->edges; edge != NULL; edge = edge->next)
 	{
-		if (graph_backtrack(edge->dest, target, visited, path))
+		if (!edge->dest)
+			continue;
+
+		if (graph_backtrack(edge->dest, target, visited, visited_count, path))
 		{
 			queue_push_front(path, strdup(curr->content));
 			return (1);
@@ -55,7 +70,8 @@ queue_t *backtracking_graph(graph_t *graph, vertex_t const *start,
 			    vertex_t const *target)
 {
 	queue_t *path;
-	char *visited;
+	char const **visited;
+	int visited_count = 0;
 	size_t num_vertices;
 
 	if (!graph || !start || !target)
@@ -67,14 +83,15 @@ queue_t *backtracking_graph(graph_t *graph, vertex_t const *start,
 	if (!path)
 		return (NULL);
 
-	visited = calloc(num_vertices, sizeof(char));
+	/* Track using string pointers rather than dangerous internal indices */
+	visited = malloc(num_vertices * sizeof(char *));
 	if (!visited)
 	{
 		free(path);
 		return (NULL);
 	}
 
-	if (!graph_backtrack(start, target, visited, path))
+	if (!graph_backtrack(start, target, visited, &visited_count, path))
 	{
 		free(visited);
 		free(path);
