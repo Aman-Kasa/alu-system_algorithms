@@ -26,7 +26,7 @@ int graph_backtrack(vertex_t const *curr, vertex_t const *target,
 
 	if (strcmp(curr->content, target->content) == 0)
 	{
-		enqueue(path, strdup(curr->content));
+		queue_enqueue(path, strdup(curr->content));
 		return (1);
 	}
 
@@ -34,7 +34,7 @@ int graph_backtrack(vertex_t const *curr, vertex_t const *target,
 	{
 		if (graph_backtrack(edge->dest, target, visited, path))
 		{
-			enqueue(path, strdup(curr->content));
+			queue_enqueue(path, strdup(curr->content));
 			return (1);
 		}
 	}
