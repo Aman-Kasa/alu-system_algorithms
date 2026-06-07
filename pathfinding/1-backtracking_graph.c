@@ -26,7 +26,7 @@ int graph_backtrack(vertex_t const *curr, vertex_t const *target,
 
 	if (strcmp(curr->content, target->content) == 0)
 	{
-		queue_push(path, strdup(curr->content));
+		enqueue(path, strdup(curr->content));
 		return (1);
 	}
 
@@ -34,8 +34,7 @@ int graph_backtrack(vertex_t const *curr, vertex_t const *target,
 	{
 		if (graph_backtrack(edge->dest, target, visited, path))
 		{
-			/* Insert at front of path to maintain start -> target order */
-			queue_push(path, strdup(curr->content));
+			enqueue(path, strdup(curr->content));
 			return (1);
 		}
 	}
@@ -57,7 +56,6 @@ queue_t *backtracking_graph(graph_t *graph, vertex_t const *start,
 {
 	queue_t *path;
 	char *visited;
-	/* Fallback sizing in case nb_vertices is corrupted/0 in test harness */
 	size_t num_vertices;
 
 	if (!graph || !start || !target)
